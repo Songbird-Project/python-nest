@@ -8,6 +8,20 @@ from pathlib import Path
 import ast
 
 @dataclass
+class LocaleGeneral:
+    lang: str = "en_US.UTF-8"
+    language: str = lang
+
+@dataclass
+class LocaleTime:
+    abday: str = "Sun;Mon;Tue;Wed;Thu;Fri;Sat"
+
+@dataclass
+class Locale:
+    localeGeneral: LocaleGeneral
+    localeTime: LocaleTime
+
+@dataclass
 class User:
     homeDir: str = ""
     fullName: str = ""
