@@ -1,10 +1,15 @@
 import nest
 
+
+def genInfo():
+    with open(f"{nest.nest_autogen}genInfo.md", "w") as file:
+        file.write("Hello")
+
 def preBuild():
-    print("hello")
+    pass
 
 def postBuild():
-    pass
+    genInfo()
 
 config = nest.newConfig()
 
@@ -20,11 +25,16 @@ vaelixd = nest.User(
     userName="vaelixd",
     homeDir="/home/vaelixd",
     manageHome=True,
-    groups=["vaelixd", "wheel"]
+    groups=["wheel"]
+)
+
+dds = nest.User(
+    userName="dds",
 )
 
 config.users = [
-    vaelixd
+    vaelixd,
+    dds
 ]
 
 nest.returnConfig(config)
