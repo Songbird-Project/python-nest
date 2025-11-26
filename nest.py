@@ -11,15 +11,15 @@ import ast
 @dataclass
 class Locale:
     lang: str = "en_US.UTF-8"
-    address: str = lang
-    identification: str = lang
-    measurement: str = lang
-    monetary: str = lang
-    name: str = lang
-    numeric: str = lang
-    paper: str = lang
-    telephone: str = lang
-    time: str = lang
+    address: str = ""
+    identification: str = ""
+    measurement: str = ""
+    monetary: str = ""
+    name: str = ""
+    numeric: str = ""
+    paper: str = ""
+    telephone: str = ""
+    time: str = ""
 
 
 @dataclass
@@ -34,6 +34,7 @@ class User:
 @dataclass
 class SystemConfig:
     hostname: str
+    timezone: str = "Etc/UTC"
     locale: Locale = field(default_factory=Locale)
     kernels: List[str] = field(default_factory=list)
     users: List[User] = field(default_factory=list)
@@ -58,7 +59,10 @@ def newConfig() -> SystemConfig:
             value = value.strip("'\"")
             os_info[key.lower()] = value
 
-    config = SystemConfig(hostname=os_info["id"], kernels=["linux"])
+    config = SystemConfig(
+        hostname=os_info["id"],
+        kernels=["linux"],
+    )
 
     return config
 
@@ -179,7 +183,7 @@ def __generateBuildFiles(buildFunc: FunctionType, buildType: str):
     deps = module["imports"]
     functions = module["functions"]
 
-    if not path.exists(nest_autogen) and nest_autogen != "":
+    if not path.exists(nest_autogen) and nest_autogen:
         Path(nest_autogen).mkdir(parents=True)
 
     with open(f"{nest_autogen}{buildType}.py", "w") as file:
@@ -221,7 +225,7 @@ def __generateUserConfig(users: List[User]):
 
 """
 
-    if not path.exists(nest_autogen) and nest_autogen != "":
+    if not path.exists(nest_autogen) and nest_autogen:
         Path(nest_autogen).mkdir(parents=True)
 
     with open(f"{nest_autogen}users.scsv", "w") as file:
@@ -229,23 +233,41 @@ def __generateUserConfig(users: List[User]):
 
 
 def __generateLocaleConfig(config: Locale):
-    localeConf = f"""LANG={config.lang}
-LC_ADDRESS={config.address}
-LC_IDENTIFICATION={config.identification}
-LC_MEASUREMENT={config.measurement}
-LC_MONETARY={config.monetary}
-LC_NAME={config.name}
-LC_NUMERIC={config.numeric}
-LC_PAPER={config.paper}
-LC_TELEPHONE={config.telephone}
-LC_TIME={config.time}
-"""
+    address = config.address or config.lang
 
-    if not path.exists(nest_autogen) and nest_autogen != "":
+    lcVars = {
+        "ADDRESS": address,
+        "IDENTIFICATION": config.identification or address,
+        "MEASUREMENT": config.measurement or address,
+        "MONETARY": config.monetary or address,
+        "NAME": config.name or address,
+        "NUMERIC": config.numeric or address,
+        "PAPER": config.paper or address,
+        "TELEPHONE": config.telephone or address,
+        "TIME": config.time or address,
+    }
+
+    lcVars = "\n".join(f"LC_{key}={value}" for key, value in lcVars.items())
+    localeConf = f"LANG={config.lang}\n{lcVars}"
+
+    if not path.exists(nest_autogen) and nest_autogen:
         Path(nest_autogen).mkdir(parents=True)
 
     with open(f"{nest_autogen}locale.conf", "w") as file:
         file.write(localeConf)
+
+    usedLocales = set(value for value in asdict(config).values() if value)
+    requiredLocales = set()
+
+    with open("/etc/locale.gen", "r") as file:
+        for locale in file:
+            locale = locale.strip().lstrip(" #")
+
+            if any(used in locale for used in usedLocales):
+                requiredLocales.add(f"{locale}\n")
+
+    with open(f"{nest_autogen}locale.gen", "w") as file:
+        file.writelines(requiredLocales)
 
 
 def __generateSystemConfig(configDict: dict):
@@ -259,6 +281,9 @@ def __generateSystemConfig(configDict: dict):
         if type(value) != str:
             return 4
         scsvConfig += f"{key},{value}\n"
+
+    if not path.exists(nest_autogen) and nest_autogen:
+        Path(nest_autogen).mkdir(parents=True)
 
     with open(f"{nest_autogen}config.scsv", "w") as file:
         file.write(scsvConfig)
