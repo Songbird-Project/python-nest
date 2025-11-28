@@ -46,7 +46,7 @@ class SystemConfig:
 
 os_info = {}
 nest_gen_root = getenv("NEST_GEN_ROOT") or ""
-nest_autogen = nest_gen_root + "autogen/" if nest_gen_root else ""
+nest_autogen = getenv("NEST_AUTOGEN") or ""
 
 
 def newConfig() -> SystemConfig:
@@ -71,32 +71,22 @@ def returnConfig(config: SystemConfig):
     configDict = asdict(config)
 
     if configDict["locale"]:
-        print("Generating locale config...", end=" ")
         __generateLocaleConfig(config.locale)
         configDict.pop("locale")
-        print("done")
 
     if configDict["users"]:
-        print("Generating user config...", end=" ")
         __generateUserConfig(config.users)
         configDict.pop("users")
-        print("done")
 
     if configDict["preBuild"]:
-        print("Generating preBuild...", end=" ")
         __generateBuildFiles(configDict["preBuild"], "preBuild")
         configDict.pop("preBuild")
-        print("done")
 
     if configDict["postBuild"]:
-        print("Generating postBuild...", end=" ")
         __generateBuildFiles(configDict["postBuild"], "postBuild")
         configDict.pop("postBuild")
-        print("done")
 
-    print("Generating system config...", end=" ")
     __generateSystemConfig(configDict)
-    print("done")
 
 
 def __checkValue(key: str, value):
