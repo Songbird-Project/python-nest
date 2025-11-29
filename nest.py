@@ -175,7 +175,7 @@ def __generateBuildFiles(buildFunc: FunctionType, buildType: str):
     deps = module["imports"]
     functions = module["functions"]
 
-    with open(f"{nest_autogen}{buildType}.py", "w") as file:
+    with open(path.join(nest_autogen, f"{buildType}.py"), "w") as file:
         if deps:
             for dep in sorted(deps):
                 file.write(f"{dep}\n")
@@ -214,7 +214,7 @@ def __generateUserConfig(users: List[User]):
 
 """
 
-    with open(f"{nest_autogen}users.scsv", "w") as file:
+    with open(path.join(nest_autogen, "users.scsv"), "w") as file:
         file.write(usersSCSV)
 
 
@@ -236,7 +236,7 @@ def __generateLocaleConfig(config: Locale):
     lcVars = "\n".join(f"LC_{key}={value}" for key, value in lcVars.items())
     localeConf = f"LANG={config.lang}\n{lcVars}"
 
-    with open(f"{nest_autogen}locale.conf", "w") as file:
+    with open(path.join(nest_autogen, "locale.conf"), "w") as file:
         file.write(localeConf)
 
     usedLocales = set(value for value in asdict(config).values() if value)
@@ -249,7 +249,7 @@ def __generateLocaleConfig(config: Locale):
             if any(used in locale for used in usedLocales):
                 requiredLocales.add(f"{locale}\n")
 
-    with open(f"{nest_autogen}locale.gen", "w") as file:
+    with open(path.join(nest_autogen, "locale.gen"), "w") as file:
         file.writelines(requiredLocales)
 
 
@@ -265,5 +265,5 @@ def __generateSystemConfig(configDict: dict):
             return 4
         scsvConfig += f"{key},{value}\n"
 
-    with open(f"{nest_autogen}config.scsv", "w") as file:
+    with open(path.join(nest_autogen, "config.scsv"), "w") as file:
         file.write(scsvConfig)
