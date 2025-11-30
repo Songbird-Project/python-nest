@@ -32,20 +32,26 @@ config.locale = nest.Locale(
 )
 
 vaelixd = nest.User(
-    fullName="vaelixd",
     userName="vaelixd",
+    fullName="vaelixd",
     homeDir="/home/vaelixd",
     manageHome=True,
+    shell="/bin/bash",
     groups=["wheel"],
 )
 
-dds = nest.User(
-    userName="dds",
+tsp = nest.User(
+    userName="tsp",
+    fullName="The Songbird Project",
+    homeDir="/home/project",
+    manageHome=False,
+    shell="/bin/fish",
+    groups=["video", "input", "wheel"],
 )
 
 config.users = [
     vaelixd,
-    dds,
+    tsp,
 ]
 
 nest.returnConfig(config)
