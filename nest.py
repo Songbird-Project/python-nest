@@ -27,6 +27,7 @@ class User:
     userName: str = "user"
     fullName: str = ""
     homeDir: str = ""
+    shell: str = "/bin/nu"
     manageHome: bool = False
     groups: List[str] = field(default_factory=list)
 
@@ -220,6 +221,7 @@ def __generateUserConfig(users: List[User]):
         usersSCSV += f"""|{user.userName},fullName,{user.fullName}
 ,homeDir,{user.homeDir}
 ,manageHome,{str(user.manageHome).lower()}
+,shell,{user.shell}
 ,groups,{str.join(",", user.groups)}
 
 """
