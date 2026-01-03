@@ -1,7 +1,9 @@
 from dataclasses import asdict, dataclass, field
+import json
 from os import getenv, path
 from pathlib import Path
 from json import dump, dumps
+from typing import Optional
 
 
 @dataclass
@@ -37,7 +39,7 @@ class User:
     username: str = ""
     fullname: str = ""
     home_dir: str = ""
-    shell: str = ""
+    shell: str = "nu"
     manage_home: bool = False
     groups: list[str] = field(default_factory=list)
 
@@ -45,16 +47,16 @@ class User:
         if not self.username and not self.fullname:
             self.fullname = "User"
 
-        self.username = (
-            self.username if self.username else self.fullname.replace(" ", "-").lower()
-        )
-        self.fullname = self.fullname if self.fullname else self.username
-        self.home_dir = self.home_dir if self.home_dir else f"/home/{self.username}"
-        self.shell = self.shell or "nu"
-        self.manage_home = self.manage_home or False
+        if not self.username:
+            self.username = self.fullname.replace(" ", "-").lower()
+        if not self.fullname:
+            self.fullname = self.username
+
+        if not self.home_dir:
+            self.home_dir = f"/home/{self.username}"
 
         if not self.username in self.groups:
-            self.groups = [self.username] + self.groups
+            self.groups.insert(0, self.username)
 
 
 @dataclass
@@ -91,15 +93,20 @@ class Config:
             "post_build": self.post_build,
         }
 
-    def emit(self):
+    def emit(self, stdout: Optional[bool] = False, output_dir: Optional[str] = ""):
         config = self.to_dict()
 
-        nest_autogen = getenv("NEST_AUTOGEN") or ""
+        output_dir = output_dir or getenv("NEST_AUTOGEN", "")
 
-        if not path.exists(nest_autogen) and nest_autogen:
-            Path(nest_autogen).mkdir(parents=True)
+        if output_dir:
+            config_path = Path(output_dir)
+            config_path.mkdir(parents=True, exist_ok=True)
 
-        with open(path.join(nest_autogen, "config.json"), "w") as file:
-            dump(config, file, indent=4)
+            config_file = config_path / "config.json"
+            with config_file.open("w") as file:
+                json.dump(config, file, indent=4)
 
-        print(dumps(config, indent=4))
+        if stdout:
+            print(dumps(config, indent=4))
+
+        return config
